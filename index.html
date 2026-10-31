@@ -1,0 +1,1016 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Entretien Coach</title>
+<meta name="description" content="Simulateur d'entretien d'embauche avec conseils personnalisés">
+<meta name="theme-color" content="#3a8c8c">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#f7f5f0; --card:#ffffff; --ink:#24343a; --muted:#6b7b80; --line:#e4e0d6;
+  --lagon:#3a8c8c; --lagon-d:#2c6f70; --lagon-l:#dcefee; --sable:#e9dcc4; --sable-l:#f4ede0;
+  --ok:#4f8f6a; --warn:#b4823a; --mark:#f6e7b8; --radius:16px;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#162225; --card:#1e2d31; --ink:#e6eeee; --muted:#9db0b3; --line:#2e4044;
+    --lagon:#5fb3b1; --lagon-d:#7cc8c5; --lagon-l:#22403f; --sable:#5a4c33; --sable-l:#2b2a22;
+    --ok:#7cc29a; --warn:#e0b26a; --mark:#5c4f22; }
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+main{max-width:640px;margin:0 auto;padding:16px 16px 96px}
+header.top{display:flex;align-items:center;gap:10px;padding:14px 16px;max-width:640px;margin:0 auto}
+header.top h1{font-size:1.1rem;margin:0;font-weight:600;flex:1}
+.back{background:none;border:0;color:var(--lagon-d);font-size:1rem;padding:6px 0;cursor:pointer}
+h2{font-size:1.35rem;font-weight:600;margin:4px 0 12px}
+h3{font-size:1.05rem;margin:18px 0 8px;font-weight:600}
+p{margin:0 0 10px}
+.muted{color:var(--muted);font-size:.92rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin:0 0 12px}
+.card.soft{background:var(--lagon-l);border-color:transparent}
+.card.sand{background:var(--sable-l);border-color:var(--sable)}
+.tile{display:block;width:100%;text-align:left;cursor:pointer;color:inherit;font:inherit}
+.tile strong{display:block;font-size:1.05rem;margin-bottom:2px}
+.tile:active{transform:scale(.99)}
+label{display:block;font-weight:600;margin:14px 0 6px;font-size:.95rem}
+textarea,input[type=text],input[type=password],select{width:100%;font:inherit;color:var(--ink);
+  background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+textarea{min-height:110px;resize:vertical}
+textarea:focus,input:focus,select:focus{outline:2px solid var(--lagon-l);border-color:var(--lagon)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;
+  padding:13px 20px;font:inherit;font-weight:600;cursor:pointer;background:var(--lagon);color:#fff;min-height:48px}
+.btn.alt{background:var(--lagon-l);color:var(--lagon-d)}
+.btn.ghost{background:transparent;color:var(--lagon-d);border:1px solid var(--line)}
+.btn.block{width:100%}
+.btn:disabled{opacity:.5}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>.btn{flex:1}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 14px;cursor:pointer;font:inherit;color:inherit}
+.chip.on{background:var(--lagon);color:#fff;border-color:var(--lagon)}
+.q{font-size:1.2rem;line-height:1.45;font-weight:500}
+.tag{display:inline-block;font-size:.78rem;padding:2px 10px;border-radius:999px;background:var(--sable);color:var(--ink);margin-bottom:8px}
+ul.clean{margin:6px 0 0;padding-left:20px}
+ul.clean li{margin:4px 0}
+mark{background:var(--mark);color:inherit;padding:0 2px;border-radius:4px}
+.timer{font-variant-numeric:tabular-nums;font-size:1.6rem;font-weight:600;color:var(--lagon-d)}
+.timer.over{color:var(--warn)}
+.bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--lagon)}
+.score{display:grid;grid-template-columns:1fr 2fr 44px;gap:10px;align-items:center;margin:8px 0;font-size:.92rem}
+.progress{font-size:.85rem;color:var(--muted);margin-bottom:6px}
+.check{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line);font-weight:400;margin:0}
+.check input{width:22px;height:22px;margin-top:2px;accent-color:var(--lagon)}
+details{border-top:1px solid var(--line);padding:10px 0}
+details summary{cursor:pointer;font-weight:600}
+.loading{display:flex;gap:10px;align-items:center;color:var(--muted);padding:20px 0}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--lagon);animation:p 1s infinite alternate}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+@keyframes p{from{opacity:.25}to{opacity:1}}
+.mic.on{background:var(--warn);color:#fff}
+.err{background:#fbe9e4;color:#7a2e1c;border-radius:12px;padding:12px;margin:10px 0}
+@media (prefers-color-scheme: dark){.err{background:#4a2a22;color:#ffd9cf}}
+.small{font-size:.85rem}
+.sp{height:8px}
+:root{--c1:#3a8c8c;--c2:#c08a3e;--c3:#5f74b0;--c4:#b0607a;--c5:#6a9a5b}
+@media (prefers-color-scheme: dark){:root{--c1:#5fb3b1;--c2:#e0b26a;--c3:#8fa3dd;--c4:#d98aa3;--c5:#93c584}}
+.seg{display:flex;background:var(--lagon-l);border-radius:999px;padding:4px;gap:4px;margin:0 0 16px}
+.seg button{flex:1;border:0;background:transparent;color:var(--lagon-d);font:inherit;font-weight:600;padding:9px 6px;border-radius:999px;cursor:pointer;min-height:40px}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translate(-50%,10px);background:var(--ink);color:var(--bg);
+  padding:10px 18px;border-radius:999px;font-size:.92rem;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;max-width:90vw;text-align:center;z-index:10}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+.dots{display:flex;gap:6px}
+.dotday{flex:1;text-align:center;font-size:.8rem;padding:6px 0;border-radius:10px;background:var(--card);color:var(--muted);border:1px solid var(--line)}
+.dotday.on{background:var(--lagon);color:#fff;border-color:var(--lagon)}
+.dotday.today{outline:2px solid var(--lagon);outline-offset:1px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;margin-top:8px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.badges{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.badge{border:1px solid var(--line);border-radius:14px;padding:12px;background:var(--card);color:var(--muted)}
+.badge b{display:block;color:var(--muted)}
+.badge.on{border-color:var(--lagon);background:var(--lagon-l);color:var(--ink)}
+.badge.on b{color:var(--ink)}
+.trend{font-size:.85rem}.trend.up{color:var(--ok)}.trend.down{color:var(--warn)}
+</style>
+</head>
+<body>
+<header class="top"><button class="back" id="backBtn" hidden>‹ Retour</button><h1 id="title">Entretien Coach</h1></header>
+<main id="app"></main>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+/* ================= Données ================= */
+const CATS = {
+  presentation:"Présentation", motivation:"Motivation", parcours:"Parcours",
+  competences:"Compétences", situations:"Mises en situation", poste:"Projet et poste",
+  pieges:"Questions pièges", fin:"Fin d'entretien"
+};
+// Banque hors ligne : chaque question a un conseil (méthode) court.
+const BANK = [
+ {c:"presentation",q:"Présentez-vous en quelques minutes.",t:"Fil conducteur en 3 temps : qui vous êtes aujourd'hui, 2 ou 3 expériences clés liées au poste, pourquoi vous êtes là. 2 minutes maximum."},
+ {c:"presentation",q:"Qu'est-ce qui ne figure pas sur votre CV et que je devrais savoir ?",t:"Une qualité ou une expérience personnelle (bénévolat, projet, passion) reliée à une compétence utile au poste."},
+ {c:"presentation",q:"Comment vos collègues vous décriraient-ils ?",t:"Trois mots, chacun appuyé par un exemple bref. Évitez les adjectifs sans preuve."},
+ {c:"motivation",q:"Pourquoi ce poste vous intéresse-t-il ?",t:"Reliez 2 missions de l'offre à ce que vous avez déjà fait et à ce que vous voulez développer."},
+ {c:"motivation",q:"Pourquoi notre structure plutôt qu'une autre ?",t:"Montrez que vous la connaissez : une action, une valeur ou un projet précis, et ce que ça évoque pour vous."},
+ {c:"motivation",q:"Qu'est-ce qui vous pousse à changer de poste aujourd'hui ?",t:"Parlez de ce vers quoi vous allez, pas de ce que vous fuyez. Restez positif sur votre poste actuel."},
+ {c:"motivation",q:"Qu'attendez-vous de ce poste dans un an ?",t:"Un objectif concret pour la structure et un objectif d'apprentissage pour vous."},
+ {c:"parcours",q:"Racontez-moi votre parcours.",t:"Racontez une logique, pas une liste : chaque étape vous a apporté quelque chose qui mène à ce poste."},
+ {c:"parcours",q:"Quelle est la réalisation dont vous êtes le plus fier ?",t:"Méthode STAR : Situation, Tâche, Action (ce que VOUS avez fait), Résultat chiffré ou observable."},
+ {c:"parcours",q:"Comment expliquez-vous cette reconversion ou ce changement de cap ?",t:"Présentez-la comme un choix réfléchi et montrez les compétences transférables."},
+ {c:"competences",q:"Quelles sont vos trois principales qualités pour ce poste ?",t:"Choisissez-les dans l'offre. Une preuve courte pour chacune."},
+ {c:"competences",q:"Quel est votre principal point faible ?",t:"Un vrai point d'amélioration, non rédhibitoire pour le poste, et ce que vous faites déjà pour progresser."},
+ {c:"competences",q:"Comment organisez-vous votre travail quand plusieurs urgences arrivent en même temps ?",t:"Décrivez votre méthode (priorisation, outils, communication) puis un exemple réel."},
+ {c:"competences",q:"Comment vous formez-vous et restez-vous à jour dans votre domaine ?",t:"Sources précises, formations suivies, et ce que vous avez appliqué concrètement."},
+ {c:"competences",q:"Quelle expérience avez-vous de la gestion de projet ?",t:"Un projet de bout en bout : objectif, acteurs, budget ou moyens, étapes, résultat, ce que vous referiez autrement."},
+ {c:"situations",q:"Parlez-moi d'un conflit dans une équipe et de la façon dont vous l'avez géré.",t:"STAR. Insistez sur l'écoute et la solution trouvée, sans accabler l'autre personne."},
+ {c:"situations",q:"Racontez un échec et ce que vous en avez appris.",t:"Assumez sans vous dévaloriser. 30 % sur l'échec, 70 % sur ce que vous avez changé ensuite."},
+ {c:"situations",q:"Décrivez une situation où vous avez dû convaincre quelqu'un de réticent.",t:"Montrez comment vous avez compris ses freins avant d'argumenter."},
+ {c:"situations",q:"Racontez une fois où vous avez pris une initiative sans qu'on vous le demande.",t:"STAR, avec un résultat concret pour l'équipe ou le public."},
+ {c:"situations",q:"Parlez d'une situation où vous avez dû travailler avec des partenaires très différents de vous.",t:"Adaptation, compréhension des codes de l'autre, résultat commun obtenu."},
+ {c:"situations",q:"Décrivez un moment où vous avez dû vous adapter à un changement imprévu.",t:"Ce qui a changé, votre réaction immédiate, la réorganisation, le résultat."},
+ {c:"poste",q:"Quelles seraient vos priorités pendant vos trois premiers mois ?",t:"Écouter et comprendre, rencontrer les partenaires, puis une première action visible et réaliste."},
+ {c:"poste",q:"Selon vous, quels sont les principaux défis de ce poste ?",t:"Montrez que vous avez lu l'offre en profondeur et proposez une piste pour chaque défi."},
+ {c:"poste",q:"Comment travailleriez-vous avec des interlocuteurs d'autres pays ou d'autres cultures ?",t:"Exemples d'expériences interculturelles, langues, attitudes (écoute, clarté, patience)."},
+ {c:"poste",q:"Comment évalueriez-vous la réussite d'un projet que vous pilotez ?",t:"Des indicateurs simples, fixés au départ, mesurés pendant et après le projet."},
+ {c:"pieges",q:"Quelles sont vos prétentions salariales ?",t:"Renseignez-vous avant (grille, fourchette du marché). Donnez une fourchette argumentée, ou renvoyez à la grille si le poste en a une."},
+ {c:"pieges",q:"Vous n'avez pas toutes les compétences demandées. Pourquoi vous ?",t:"Reconnaissez l'écart, montrez ce qui compense et comment vous allez le combler rapidement."},
+ {c:"pieges",q:"Où vous voyez-vous dans cinq ans ?",t:"Ambition réaliste, cohérente avec la structure. Évitez « à votre place »."},
+ {c:"pieges",q:"Avez-vous d'autres candidatures en cours ?",t:"Restez honnête et sobre, et redites pourquoi ce poste est votre priorité."},
+ {c:"pieges",q:"Qu'est-ce qui pourrait vous faire quitter ce poste rapidement ?",t:"Répondez sur des valeurs fondamentales, pas sur des détails de confort."},
+ {c:"fin",q:"Avez-vous des questions à nous poser ?",t:"Préparez 2 ou 3 vraies questions : missions, équipe, premiers projets, suite du recrutement. Jamais « non »."},
+ {c:"fin",q:"Pour conclure, pourquoi devrions-nous vous choisir ?",t:"Synthèse en 3 points : ce que vous apportez, la preuve, votre motivation. 1 minute."}
+];
+const STAR = [
+  ["s","J'ai décrit la situation (contexte, où, quand)."],
+  ["t","J'ai précisé ma mission ou l'enjeu."],
+  ["a","J'ai expliqué MES actions (je, pas « on »)."],
+  ["r","J'ai donné un résultat concret, si possible chiffré."],
+  ["l","J'ai relié ma réponse au poste visé."],
+  ["p","Je suis resté positif (pas de critique, pas d'auto-dévalorisation)."],
+  ["d","Ma réponse était claire et d'une durée raisonnable."]
+];
+const TONS = {bienveillant:"bienveillant et encourageant", neutre:"neutre et professionnel", exigeant:"exigeant, qui pousse dans les retranchements avec des relances précises, sans être agressif"};
+const MODELS = [["claude-sonnet-5-5","Sonnet (recommandé)"],["claude-haiku-5-5","Haiku (rapide, économique)"],["claude-opus-5-5","Opus (le plus fin, plus cher)"]];
+
+/* ================= État & stockage ================= */
+const KEY = "entretienCoach.v1";
+const DEF = {
+  cfg:{apiKey:"",model:"claude-sonnet-5-5"},
+  docs:{cv:"",offre:"",lettre:"",entreprise:"",moi:""},
+  opts:{ton:"neutre",nb:8,conseils:"apres"},
+  analyse:null, session:null, offline:null,
+  mode:"sobre", goal:3,
+  hist:{ia:[],off:[]},
+  game:{xp:0,awarded:{},badges:{},days:[]}
+};
+let S = load();
+function load(){
+  const D = JSON.parse(JSON.stringify(DEF));
+  try{ const raw = localStorage.getItem(KEY); if(raw){ const o = JSON.parse(raw);
+    return {...D,...o,cfg:{...D.cfg,...o.cfg},docs:{...D.docs,...o.docs},opts:{...D.opts,...o.opts},
+      hist:{...D.hist,...o.hist},game:{...D.game,...o.game}}; } }catch(e){}
+  return D;
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+
+/* ================= Utilitaires ================= */
+const $ = s => document.querySelector(s);
+const app = $("#app");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+const marks = s => esc(s).replace(/\[\+([\s\S]*?)\+\]/g, "<mark>$1</mark>").replace(/\n/g,"<br>");
+const list = a => (a && a.length) ? `<ul class="clean">${a.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>` : `<p class="muted">—</p>`;
+const shuffle = a => { a = a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const loading = (txt) => `<div class="loading"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>${esc(txt)}</span></div>`;
+const fmt = s => `${Math.floor(Math.abs(s)/60)}:${String(Math.abs(s)%60).padStart(2,"0")}`;
+
+let history = [];
+const PENDING = new Map();
+function go(screen, ...args){ stopTimer(); stopMic(); history.push([screen,args]); render(screen,args); window.scrollTo(0,0); }
+function back(){ history.pop(); const prev = history.pop() || ["home",[]]; go(prev[0], ...prev[1]); }
+$("#backBtn").onclick = back;
+function render(screen,args){
+  $("#backBtn").hidden = (screen === "home");
+  SCREENS[screen](...args);
+}
+function setTitle(t){ $("#title").textContent = t; }
+
+/* ================= Dictée vocale ================= */
+let rec = null;
+function micButton(targetId){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR) return "";
+  return `<button class="btn ghost mic" data-mic="${targetId}" type="button">🎙 Dicter</button>`;
+}
+function bindMic(){
+  document.querySelectorAll("[data-mic]").forEach(b=>{
+    b.onclick = () => {
+      if(rec){ stopMic(); return; }
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const ta = document.getElementById(b.dataset.mic);
+      const base = ta.value ? ta.value.trimEnd() + " " : "";
+      rec = new SR(); rec.lang = "fr-FR"; rec.continuous = true; rec.interimResults = true;
+      rec.onresult = e => { let t=""; for(let i=0;i<e.results.length;i++) t += e.results[i][0].transcript; ta.value = base + t; };
+      rec.onend = () => { rec=null; b.classList.remove("on"); b.textContent="🎙 Dicter"; };
+      rec.onerror = () => { stopMic(); };
+      rec.start(); b.classList.add("on"); b.textContent = "■ Arrêter";
+    };
+  });
+}
+function stopMic(){ if(rec){ try{rec.stop();}catch(e){} rec=null; } }
+
+/* ================= Chrono ================= */
+let timerId = null;
+function startTimer(el, limit){
+  const t0 = Date.now();
+  const tick = () => { const s = Math.round((Date.now()-t0)/1000); const r = limit - s;
+    el.textContent = r>=0 ? fmt(r) : "+"+fmt(r); el.classList.toggle("over", r<0); el.dataset.elapsed = s; };
+  tick(); timerId = setInterval(tick, 1000);
+}
+function stopTimer(){ if(timerId){ clearInterval(timerId); timerId=null; } }
+
+/* ================= API Anthropic ================= */
+async function claude(system, user, maxTokens){
+  if(!navigator.onLine) throw new Error("Pas de connexion internet. Utilise le mode hors ligne.");
+  if(!S.cfg.apiKey) throw new Error("Aucune clé API. Ajoute-la dans Réglages.");
+  const r = await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",
+    headers:{"content-type":"application/json","x-api-key":S.cfg.apiKey,
+      "anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+    body:JSON.stringify({model:S.cfg.model,max_tokens:maxTokens||1500,system,messages:[{role:"user",content:user}]})
+  });
+  const data = await r.json().catch(()=>({}));
+  if(!r.ok){
+    const m = data?.error?.message || ("Erreur " + r.status);
+    if(r.status===401) throw new Error("Clé API refusée. Vérifie-la dans Réglages.");
+    if(r.status===429) throw new Error("Trop de demandes ou crédit épuisé. Réessaie dans un moment.");
+    throw new Error(m);
+  }
+  return (data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
+}
+function parseJSON(txt){
+  const a = txt.indexOf("{"), b = txt.lastIndexOf("}");
+  if(a<0||b<0) throw new Error("Réponse de l'IA illisible. Réessaie.");
+  return JSON.parse(txt.slice(a,b+1));
+}
+async function ask(system,user,max){ return parseJSON(await claude(system,user,max)); }
+
+function docsBlock(){
+  const d = S.docs, part = (tag,label,v) => v.trim() ? `<${tag}>\n${v.trim()}\n</${tag}>` : `<${tag}>(non fourni : ${label})</${tag}>`;
+  return [part("cv","CV",d.cv),part("offre","offre d'emploi",d.offre),part("lettre","lettre de motivation",d.lettre),
+    part("entreprise","infos sur la structure",d.entreprise),part("candidat","infos personnelles",d.moi)].join("\n");
+}
+const RULES = `Règles absolues :
+- Appuie-toi uniquement sur les documents fournis et sur les réponses du candidat. N'invente aucune expérience, aucun diplôme, aucun chiffre, aucune information sur la structure.
+- Si un élément utile manque, pose-le sous forme de question au candidat (« As-tu déjà… ? ») au lieu de l'écrire à sa place.
+- Écris en français, de façon claire et directe, sans flatterie. Un retour franc mais constructif.
+- Réponds uniquement avec un objet JSON valide, sans texte autour.`;
+function sysRecruteur(){ return `Tu es un recruteur expérimenté qui mène un entretien d'embauche structuré, pour l'entraînement d'un candidat. Ton : ${TONS[S.opts.ton]}. Tu vouvoies le candidat.\n${RULES}\n\nDocuments :\n${docsBlock()}`; }
+function sysCoach(){ return `Tu es un coach en recrutement qui a formé de nombreux DRH. Tu aides un candidat à améliorer ses réponses d'entretien. Tu tutoies le candidat. Tu t'appuies sur la méthode STAR (Situation, Tâche, Action, Résultat) et sur l'adéquation avec l'offre.\n${RULES}\n\nDocuments :\n${docsBlock()}`; }
+
+/* ================= Import de fichiers (PDF, ODT, DOCX, TXT) ================= */
+// Les bibliothèques sont livrées avec l'appli (dossier lib/) : l'import marche hors ligne.
+const loaded = {};
+function loadScript(src){
+  return loaded[src] ||= new Promise((ok, ko) => {
+    const s = document.createElement("script"); s.src = src; s.onload = ok;
+    s.onerror = () => { delete loaded[src]; ko(new Error("Impossible de charger le lecteur de fichiers. Ouvre l'appli une fois avec internet.")); };
+    document.head.appendChild(s);
+  });
+}
+async function extractText(file){
+  const name = file.name.toLowerCase();
+  const ext = name.slice(name.lastIndexOf(".") + 1);
+  if(ext === "txt" || file.type === "text/plain") return (await file.text()).trim();
+  if(ext === "pdf" || file.type === "application/pdf") return pdfText(file);
+  if(ext === "docx") return docxText(file);
+  if(ext === "odt") return odtText(file);
+  if(ext === "doc") throw new Error("Ancien format Word (.doc) non pris en charge. Enregistre-le en .docx, .odt ou PDF.");
+  throw new Error("Format non pris en charge. Utilise PDF, ODT, DOCX ou TXT.");
+}
+const tidy = t => t.replace(/[ \t]+\n/g,"\n").replace(/\n{3,}/g,"\n\n").replace(/[ \t]{2,}/g," ").trim();
+
+async function pdfText(file){
+  await loadScript("lib/pdf.min.js");
+  const lib = window.pdfjsLib;
+  lib.GlobalWorkerOptions.workerSrc = "lib/pdf.worker.min.js";
+  let pdf;
+  try{ pdf = await lib.getDocument({data: await file.arrayBuffer()}).promise; }
+  catch(e){ throw new Error(e && e.name === "PasswordException" ? "Ce PDF est protégé par un mot de passe." : "PDF illisible ou endommagé."); }
+  const pages = [];
+  for(let n = 1; n <= pdf.numPages; n++){
+    const c = await (await pdf.getPage(n)).getTextContent();
+    let t = "";
+    for(const it of c.items){ t += it.str; t += it.hasEOL ? "\n" : (it.str && !/\s$/.test(it.str) ? " " : ""); }
+    pages.push(t);
+  }
+  return tidy(pages.join("\n\n"));
+}
+
+async function zipXml(file, path){
+  await loadScript("lib/jszip.min.js");
+  let zip;
+  try{ zip = await JSZip.loadAsync(await file.arrayBuffer()); }catch(e){ throw new Error("Fichier illisible ou endommagé."); }
+  const entry = zip.file(path);
+  if(!entry) throw new Error("Ce fichier ne ressemble pas à un document texte valide.");
+  return new DOMParser().parseFromString(await entry.async("string"), "application/xml");
+}
+
+async function docxText(file){
+  const W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+  const doc = await zipXml(file, "word/document.xml");
+  const out = [];
+  for(const p of doc.getElementsByTagNameNS(W, "p")){
+    let nested = false; // paragraphe imbriqué (zone de texte) : déjà lu avec son parent
+    for(let a = p.parentNode; a && a.nodeType === 1; a = a.parentNode){ if(a.namespaceURI === W && a.localName === "p"){ nested = true; break; } }
+    if(nested) continue;
+    let t = "";
+    const walk = n => { for(const c of n.childNodes){ if(c.nodeType !== 1) continue;
+      if(c.namespaceURI === W && c.localName === "t") t += c.textContent;
+      else if(c.namespaceURI === W && c.localName === "tab") t += "\t";
+      else if(c.namespaceURI === W && (c.localName === "br" || c.localName === "cr")) t += "\n";
+      else walk(c); } };
+    walk(p); out.push(t);
+  }
+  return tidy(out.join("\n"));
+}
+
+async function odtText(file){
+  const T = "urn:oasis:names:tc:opendocument:xmlns:text:1.0";
+  const doc = await zipXml(file, "content.xml");
+  const out = [];
+  const para = n => { let t = ""; for(const c of n.childNodes){
+      if(c.nodeType === 3) t += c.nodeValue;
+      else if(c.nodeType === 1){
+        if(c.namespaceURI === T && c.localName === "s") t += " ".repeat(+c.getAttributeNS(T,"c") || 1);
+        else if(c.namespaceURI === T && c.localName === "tab") t += "\t";
+        else if(c.namespaceURI === T && c.localName === "line-break") t += "\n";
+        else if(c.namespaceURI === T && c.localName === "note") continue; // notes de bas de page ignorées
+        else t += para(c);
+      } } return t; };
+  const walk = n => { for(const c of n.childNodes){ if(c.nodeType !== 1) continue;
+      if(c.namespaceURI === T && (c.localName === "p" || c.localName === "h")) out.push(para(c));
+      else walk(c); } };
+  const body = doc.getElementsByTagNameNS("urn:oasis:names:tc:opendocument:xmlns:office:1.0", "text")[0] || doc.documentElement;
+  walk(body);
+  return tidy(out.join("\n"));
+}
+
+/* ================= Progression & jeu ================= */
+// L'historique est toujours enregistré ; le mode ne change que l'affichage.
+const CRIT = ["Clarté","Lien avec le poste","Exemples concrets","Valorisation du parcours","Ton positif"];
+const SERIES = ["var(--c1)","var(--c2)","var(--c3)","var(--c4)","var(--c5)"];
+const LEVELS = [[0,"Candidat"],[150,"Préparé"],[400,"Structuré"],[800,"Convaincant"],[1500,"Prêt pour le jury"]];
+const BADGES = [
+  ["premier","Premier pas","Valider une première réponse"],
+  ["star","STAR complet","Cocher les 7 critères sur une réponse hors ligne"],
+  ["perseverant","Persévérant","Faire 3 essais sur la même question"],
+  ["jury","Face au jury","Terminer un entretien avec le recruteur Exigeant"],
+  ["marathon","Marathon","Terminer un entretien de 12 questions"],
+  ["regulier","Régulier","Atteindre l'objectif de la semaine"],
+  ["progres","En progrès","Gagner 1 point sur un critère entre deux entretiens"],
+  ["pret","Prêt","Obtenir 4/5 de moyenne à un bilan"]
+];
+const STAR_SHORT = {s:"Situation",t:"Mission",a:"Mes actions",r:"Résultat",l:"Lien avec le poste",p:"Ton positif",d:"Clarté, durée"};
+const pad = n => String(n).padStart(2,"0");
+const dayKey = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const today = () => dayKey(new Date());
+const frDate = k => k.split("-").reverse().join("/");
+const avg = a => a.length ? a.reduce((x,y)=>x+y,0)/a.length : 0;
+const fr1 = n => n.toLocaleString("fr-FR",{maximumFractionDigits:1});
+function scoreOf(sc,k){ const v = Number((sc||{})[k]); return Number.isFinite(v) ? Math.max(0,Math.min(5,v)) : 0; }
+const meanScore = e => avg(CRIT.map(k=>scoreOf(e.scores,k)));
+
+const toastQ = []; let toastBusy = false;
+function toast(msg){ if(S.mode !== "jeu") return; toastQ.push({m:msg, at:Date.now()}); if(!toastBusy) nextToast(); }
+function nextToast(){
+  // Les notifications de plus de 5 s sont abandonnées : jamais de message en retard.
+  while(toastQ.length && Date.now() - toastQ[0].at > 5000) toastQ.shift();
+  const item = toastQ.shift(), t = $("#toast");
+  if(!item){ toastBusy = false; return; }
+  toastBusy = true; t.textContent = item.m; t.classList.add("on");
+  setTimeout(()=>{ t.classList.remove("on"); setTimeout(nextToast, 350); }, 2000);
+}
+function levelOf(xp){ let i = 0; LEVELS.forEach((l,j)=>{ if(xp >= l[0]) i = j; }); return i; }
+function weekDates(){
+  const d = new Date(), dow = (d.getDay()+6)%7;
+  return [...Array(7)].map((_,i)=>dayKey(new Date(d.getFullYear(), d.getMonth(), d.getDate()-dow+i)));
+}
+const weekDone = () => weekDates().filter(d=>S.game.days.includes(d)).length;
+function markDay(){
+  const g = S.game, d = today();
+  if(!g.days.includes(d)){ g.days.push(d); if(g.days.length > 400) g.days = g.days.slice(-400); }
+  if(weekDone() >= S.goal) badge("regulier");
+  save();
+}
+function award(key, pts, label){ // une même action ne rapporte qu'une fois
+  const g = S.game; if(g.awarded[key]) return;
+  const before = levelOf(g.xp); g.awarded[key] = 1; g.xp += pts; save();
+  toast(`+${pts} · ${label}`);
+  const after = levelOf(g.xp); if(after > before) toast(`Nouveau niveau : ${LEVELS[after][1]}`);
+}
+function badge(id){
+  const g = S.game; if(g.badges[id]) return;
+  g.badges[id] = today(); save();
+  toast(`Badge obtenu : ${BADGES.find(b=>b[0]===id)[1]}`);
+}
+
+// Accroches dans le parcours
+function gameAnswer(s, idx){ s.id ||= Date.now(); markDay(); badge("premier"); award(`ans:${s.id}:${idx}`, 10, "Réponse validée"); }
+function gameRetry(s, idx, it, r){
+  s.id ||= Date.now(); markDay();
+  if(r.a_progresse === true) award(`retry:${s.id}:${idx}:${it.retries.length}`, 15, "Essai en progrès");
+  if(it.retries.length >= 2) badge("perseverant");
+}
+function onBilan(s){
+  s.id ||= Date.now();
+  const answered = s.items.filter(i=>i.answer);
+  const e = {id:s.id, date:today(), ton:s.opts.ton, nb:answered.filter(i=>!i.relance).length,
+    essais:answered.reduce((n,i)=>n+1+i.retries.length,0), complet:s.main >= s.opts.nb, scores:{}};
+  CRIT.forEach(k=>e.scores[k] = scoreOf(s.bilan.scores,k));
+  const H = S.hist.ia, prev = H.filter(x=>x.id !== s.id).slice(-1)[0];
+  const j = H.findIndex(x=>x.id === s.id); if(j >= 0) H[j] = e; else H.push(e);
+  markDay();
+  if(e.complet){
+    const dur = s.opts.ton === "exigeant";
+    award(`end:${s.id}`, dur ? 70 : 50, dur ? "Entretien exigeant terminé" : "Entretien terminé");
+    if(dur) badge("jury");
+    if(s.opts.nb >= 12) badge("marathon");
+  }
+  if(meanScore(e) >= 4) badge("pret");
+  if(prev && CRIT.some(k=>scoreOf(e.scores,k) - scoreOf(prev.scores,k) >= 1)) badge("progres");
+  save();
+}
+function gameOffQ(o){
+  o.id ||= Date.now(); markDay();
+  award(`off:${o.id}:${o.i}`, 5, "Question terminée");
+  if(o.daily) award(`daily:${o.daily}`, 10, "Défi du jour");
+}
+function gameOffEval(o, it){
+  o.id ||= Date.now();
+  if(it.star.length === STAR.length){ badge("star"); award(`offstar:${o.id}:${o.i}`, 5, "STAR complet"); }
+  recordOff(o);
+}
+function recordOff(o){
+  o.id ||= Date.now();
+  const done = o.items.filter(i=>i.answer || i.star.length); if(!done.length) return;
+  const e = {id:o.id, date:today(), n:done.length, star:{}};
+  STAR.forEach(([k])=>e.star[k] = done.filter(i=>i.star.includes(k)).length);
+  const H = S.hist.off, j = H.findIndex(x=>x.id === o.id); if(j >= 0) H[j] = e; else H.push(e);
+  save();
+}
+function dailyQ(){ let h = 0; for(const c of today()) h = (h*31 + c.charCodeAt(0)) >>> 0; return BANK[h % BANK.length]; }
+function startDaily(){
+  const b = dailyQ();
+  S.offline = {id:Date.now(), daily:today(), cats:Object.keys(CATS), dur:120, i:0, items:[{q:b.q,c:b.c,t:b.t,answer:"",star:[],time:0}]};
+  save(); go("offQ");
+}
+function trend(s, k){
+  if(S.mode === "sobre") return "";
+  const H = S.hist.ia, j = H.findIndex(e=>e.id === s.id); if(j < 1) return "";
+  const d = scoreOf(H[j].scores,k) - scoreOf(H[j-1].scores,k);
+  return ` <span class="trend ${d>0?"up":d<0?"down":""}" title="Par rapport à l'entretien précédent">${d>0?"↑":d<0?"↓":"="}</span>`;
+}
+
+// Éléments d'interface
+function segMode(){
+  return `<div class="seg" role="group" aria-label="Mode d'affichage">${[["sobre","Sobre"],["progression","Progression"],["jeu","Jeu"]]
+    .map(([v,l])=>`<button type="button" data-mode="${v}" class="${S.mode===v?"on":""}" aria-pressed="${S.mode===v}">${l}</button>`).join("")}</div>`;
+}
+function bindSeg(after){
+  document.querySelectorAll("[data-mode]").forEach(b=>b.onclick = () => {
+    S.mode = b.dataset.mode; save();
+    document.querySelectorAll("[data-mode]").forEach(x=>{ x.classList.toggle("on", x===b); x.setAttribute("aria-pressed", x===b); });
+    if(after) after();
+  });
+}
+function homeExtras(){
+  if(S.mode === "sobre") return "";
+  const H = S.hist.ia, last = H[H.length-1], prev = H[H.length-2];
+  let h = `<button class="card tile" id="t-prog"><strong>Ma progression</strong>`;
+  if(last){
+    const m = meanScore(last), d = prev ? m - meanScore(prev) : null;
+    h += `<span class="muted">Dernier entretien : <b style="color:var(--ink)">${fr1(m)}/5</b>${d!==null ? ` (${d>=0?"+":""}${fr1(d)})` : ""}</span><br>`;
+  }
+  h += `<span class="muted">${H.length} entretien(s) · ${S.hist.off.length} entraînement(s) hors ligne</span></button>`;
+  if(S.mode === "jeu"){
+    const g = S.game, li = levelOf(g.xp), next = LEVELS[li+1], td = today();
+    const pct = next ? Math.round(100*(g.xp - LEVELS[li][0])/(next[0] - LEVELS[li][0])) : 100;
+    const lab = ["L","M","M","J","V","S","D"];
+    h += `<div class="card soft">
+      <div class="row" style="justify-content:space-between;align-items:baseline"><strong>${LEVELS[li][1]}</strong><span class="small">${g.xp} pts</span></div>
+      <div class="bar" style="margin:8px 0 4px;background:var(--card)"><i style="width:${pct}%"></i></div>
+      <p class="muted small">${next ? `${next[0]-g.xp} pts avant « ${next[1]} »` : "Niveau maximum atteint"}</p>
+      <p class="small" style="margin:10px 0 6px"><b>Objectif de la semaine :</b> ${Math.min(weekDone(),S.goal)}/${S.goal} jours${weekDone()>=S.goal?" ✓":""}</p>
+      <div class="dots">${weekDates().map((d,i)=>`<span class="dotday ${g.days.includes(d)?"on":""} ${d===td?"today":""}">${lab[i]}</span>`).join("")}</div>
+    </div>
+    <button class="card tile sand" id="t-daily"><strong>Défi du jour${g.awarded["daily:"+td] ? " ✓" : ""}</strong><span class="muted">${esc(dailyQ().q)}</span></button>`;
+  }
+  return h;
+}
+function chart(H, start){
+  const W = 340, Ht = 190, L = 24, R = 12, T = 12, B = 26, n = H.length;
+  const x = i => L + (n === 1 ? (W-L-R)/2 : i*(W-L-R)/(n-1));
+  const y = v => T + (5 - Math.max(1,v))*(Ht-T-B)/4;
+  let s = `<svg viewBox="0 0 ${W} ${Ht}" width="100%" role="img" aria-label="Évolution des 5 notes au fil des entretiens">`;
+  for(let v = 1; v <= 5; v++) s += `<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" style="stroke:var(--line)"/><text x="${L-8}" y="${y(v)+4}" font-size="11" text-anchor="end" style="fill:var(--muted)">${v}</text>`;
+  H.forEach((e,i)=> s += `<text x="${x(i)}" y="${Ht-6}" font-size="11" text-anchor="middle" style="fill:var(--muted)">${start+i+1}</text>`);
+  CRIT.forEach((k,ci)=>{
+    const off = (ci-2)*1.8; // léger décalage pour que les courbes confondues restent visibles
+    const pts = H.map((e,i)=>[x(i), y(scoreOf(e.scores,k)) + off]);
+    s += `<polyline points="${pts.map(p=>p.join(",")).join(" ")}" fill="none" style="stroke:${SERIES[ci]}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+    s += pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3.5" style="fill:${SERIES[ci]}"/>`).join("");
+  });
+  return s + `</svg><div class="legend">${CRIT.map((k,i)=>`<span><i style="background:${SERIES[i]}"></i>${k}</span>`).join("")}</div>
+    <p class="muted small" style="margin-top:6px">En bas : numéro de l'entretien. ${n < S.hist.ia.length ? `(${n} derniers)` : ""}</p>`;
+}
+const scoreRow = (label, val, max, txt) => `<div class="score"><span class="small">${esc(label)}</span><div class="bar"><i style="width:${max ? Math.round(100*val/max) : 0}%"></i></div><b class="small">${txt}</b></div>`;
+
+/* ================= Écrans ================= */
+const SCREENS = {};
+
+SCREENS.progress = () => {
+  setTitle("Ma progression");
+  const H = S.hist.ia;
+  let h = `<h2>Ma progression</h2>`;
+  if(H.length < 2){
+    h += `<div class="card soft">${H.length ? "Fais un deuxième entretien avec l'IA pour voir ta courbe." : "Termine un premier entretien avec l'IA pour voir tes notes ici."}</div>`;
+  } else {
+    const V = H.slice(-10);
+    h += `<div class="card"><h3 style="margin-top:0">Évolution des notes</h3>${chart(V, H.length - V.length)}</div>`;
+  }
+  if(H.length){
+    h += `<div class="card"><h3 style="margin-top:0">Meilleure note par critère</h3>${CRIT.map(k=>{ const b = Math.max(...H.map(e=>scoreOf(e.scores,k))); return scoreRow(k, b, 5, b+"/5"); }).join("")}</div>`;
+    const last3 = H.slice(-3), low = CRIT.map(k=>[k, avg(last3.map(e=>scoreOf(e.scores,k)))]).sort((a,b)=>a[1]-b[1])[0];
+    let up = "";
+    if(H.length >= 2){
+      const g = CRIT.map(k=>[k, scoreOf(H[H.length-1].scores,k) - scoreOf(H[0].scores,k)]).sort((a,b)=>b[1]-a[1])[0];
+      up = g[1] > 0 ? `<p><b>Plus forte progression :</b> ${esc(g[0])} (+${fr1(g[1])} depuis le premier entretien)</p>` : `<p class="muted">Pas encore de progression nette sur un critère.</p>`;
+    }
+    h += `<div class="card sand">${up}<p style="margin:0"><b>À travailler en priorité :</b> ${esc(low[0])} (moyenne ${fr1(low[1])}/5 sur les ${last3.length} derniers entretiens)</p></div>`;
+  }
+  const O = S.hist.off.slice(-5), tot = O.reduce((n,e)=>n+e.n,0);
+  h += `<div class="card"><h3 style="margin-top:0">Grille STAR (hors ligne)</h3>`;
+  h += tot ? STAR.map(([k])=>{ const c = O.reduce((n,e)=>n+(e.star[k]||0),0); return scoreRow(STAR_SHORT[k], c, tot, Math.round(100*c/tot)+" %"); }).join("")
+       + `<p class="muted small">Part de tes réponses qui contiennent chaque élément, ${O.length > 1 ? `sur les ${O.length} derniers entraînements` : "sur ton dernier entraînement"}.</p>`
+       : `<p class="muted">Pas encore d'entraînement hors ligne.</p>`;
+  h += `</div>`;
+  if(S.mode === "jeu"){
+    const n = Object.keys(S.game.badges).length;
+    h += `<h3>Badges (${n}/${BADGES.length})</h3><div class="badges">${BADGES.map(([id,name,cond])=>{ const d = S.game.badges[id];
+      return `<div class="badge ${d?"on":""}"><b>${d?"★ ":""}${esc(name)}</b><span class="small">${d ? "Obtenu le "+frDate(d) : esc(cond)}</span></div>`; }).join("")}</div>`;
+  }
+  app.innerHTML = h;
+};
+
+SCREENS.home = () => {
+  setTitle("Entretien Coach");
+  const s = S.session, ready = !!S.cfg.apiKey;
+  app.innerHTML = `
+  ${segMode()}
+  <h2>Prépare ton entretien</h2>
+  <p class="muted">Entraîne-toi, reçois des conseils, et améliore tes réponses à partir de tes propres mots.</p>
+  <div class="sp"></div>
+  ${homeExtras()}
+  <button class="card tile soft" id="t-ia"><strong>Entretien avec l'IA</strong><span class="muted">En ligne. Questions adaptées à ton CV et au poste, conseils et reformulations.</span></button>
+  ${s && !s.done ? `<button class="card tile" id="t-resume"><strong>Reprendre l'entretien en cours</strong><span class="muted">${s.items.length} question(s) déjà posée(s)</span></button>`:""}
+  ${s && s.done ? `<button class="card tile" id="t-bilan"><strong>Revoir le dernier bilan</strong><span class="muted">Entretien terminé</span></button>`:""}
+  <button class="card tile" id="t-off"><strong>Entraînement hors ligne</strong><span class="muted">Sans IA ni connexion. Questions types, chrono, grille STAR.</span></button>
+  <button class="card tile" id="t-prep"><strong>Mes documents</strong><span class="muted">CV, offre, lettre, structure, infos sur toi.</span></button>
+  <button class="card tile" id="t-set"><strong>Réglages</strong><span class="muted">${ready ? "Clé API enregistrée" : "Ajoute ta clé API pour le mode IA"}</span></button>`;
+  $("#t-ia").onclick = () => go("iaSetup");
+  $("#t-off").onclick = () => go("offSetup");
+  $("#t-prep").onclick = () => go("prep");
+  $("#t-set").onclick = () => go("settings");
+  if($("#t-resume")) $("#t-resume").onclick = () => go("interview");
+  if($("#t-bilan")) $("#t-bilan").onclick = () => go("bilan");
+  if($("#t-prog")) $("#t-prog").onclick = () => go("progress");
+  if($("#t-daily")) $("#t-daily").onclick = () => startDaily();
+  bindSeg(() => render("home", []));
+};
+
+SCREENS.settings = () => {
+  setTitle("Réglages");
+  app.innerHTML = `
+  <h2>Réglages</h2>
+  <div class="card">
+    <label for="k">Clé API Anthropic</label>
+    <input type="password" id="k" autocomplete="off" placeholder="sk-ant-…" value="${esc(S.cfg.apiKey)}">
+    <p class="muted small">Elle reste uniquement sur ce téléphone et n'est envoyée qu'à Anthropic. Crée-la sur console.anthropic.com (rubrique API Keys). Fixe une limite de dépense dans la console.</p>
+    <label for="m">Modèle</label>
+    <select id="m">${MODELS.map(([v,l])=>`<option value="${v}" ${S.cfg.model===v?"selected":""}>${l}</option>`).join("")}</select>
+    <div class="sp"></div>
+    <div class="row"><button class="btn" id="save">Enregistrer</button><button class="btn alt" id="test">Tester</button></div>
+    <div id="msg"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Affichage</h3>
+    ${segMode()}
+    <p class="muted small">Sobre : interface simple. Progression : notes et courbes. Jeu : progression, points, niveaux, badges et défi du jour. Ton historique est toujours gardé, quel que soit le mode.</p>
+    <label>Objectif de la semaine (mode Jeu)</label>
+    <div class="chips">${[2,3,4,5].map(n=>`<button class="chip ${S.goal===n?"on":""}" data-goal="${n}">${n} jours</button>`).join("")}</div>
+    <div class="sp"></div>
+    <button class="btn ghost block" id="wipeH">Effacer l'historique et la progression</button>
+    <div id="msgH"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Mes données</h3>
+    <p class="muted small">Tout est stocké sur ce téléphone, dans le navigateur. Rien n'est envoyé ailleurs, sauf à l'IA pendant un entretien en ligne.</p>
+    <button class="btn ghost block" id="wipe">Tout effacer</button>
+  </div>`;
+  const store = () => { S.cfg.apiKey = $("#k").value.trim(); S.cfg.model = $("#m").value; save(); };
+  $("#save").onclick = () => { store(); $("#msg").innerHTML = `<p class="muted">Enregistré.</p>`; };
+  $("#test").onclick = async () => { store(); $("#msg").innerHTML = loading("Test en cours…");
+    try{ await claude("Réponds par OK.","Test",10); $("#msg").innerHTML = `<p style="color:var(--ok)">La connexion fonctionne.</p>`; }
+    catch(e){ $("#msg").innerHTML = `<div class="err">${esc(e.message)}</div>`; } };
+  bindSeg();
+  document.querySelectorAll("[data-goal]").forEach(c => c.onclick = () => { S.goal = +c.dataset.goal; save();
+    document.querySelectorAll("[data-goal]").forEach(x=>x.classList.toggle("on", x===c)); });
+  $("#wipeH").onclick = () => { if(confirm("Effacer l'historique, les points et les badges ? Tes documents et ta clé sont gardés.")){
+    S.hist = {ia:[],off:[]}; S.game = {xp:0,awarded:{},badges:{},days:[]}; save(); $("#msgH").innerHTML = `<p class="muted small">Historique effacé.</p>`; } };
+  $("#wipe").onclick = () => { if(confirm("Effacer la clé, les documents et les entretiens ?")){ try{localStorage.removeItem(KEY);}catch(e){} S = load(); history=[]; go("home"); } };
+};
+
+SCREENS.prep = () => {
+  setTitle("Mes documents");
+  const f = (id,label,ph,help) => `<label for="${id}">${label}</label>${help?`<p class="muted small">${help}</p>`:""}
+    <textarea id="${id}" placeholder="${ph}">${esc(S.docs[id])}</textarea>
+    <div class="row" style="margin-top:6px"><button class="btn ghost" data-file="${id}" type="button">Importer un fichier</button></div>
+    <div id="msg-${id}"></div>`;
+  app.innerHTML = `
+  <h2>Mes documents</h2>
+  <p class="muted">Importe un fichier (PDF, ODT, DOCX ou TXT) ou colle le texte. Vérifie ensuite le texte extrait. Conseil : retire ton adresse, ton téléphone et ton mail du CV.</p>
+  ${f("offre","Offre d'emploi","Colle ici l'annonce complète…")}
+  ${f("cv","CV","Colle ici le texte de ton CV…")}
+  ${f("lettre","Lettre de motivation","Colle ici ta lettre…")}
+  ${f("entreprise","La structure","Missions, valeurs, projets, actualité…","Ce que tu sais de l'entreprise ou de l'organisme.")}
+  ${f("moi","Sur toi","Ce que tu veux mettre en avant, tes craintes, tes contraintes…","Facultatif. Aide l'IA à cibler ses conseils.")}
+  <input type="file" id="file" accept=".pdf,.odt,.docx,.txt,application/pdf,application/vnd.oasis.opendocument.text,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" hidden>
+  <div class="sp"></div>
+  <button class="btn block" id="save">Enregistrer</button>
+  <div class="sp"></div>
+  <button class="btn alt block" id="ana">Analyser mon profil pour ce poste (IA)</button>
+  <div id="out"></div>`;
+  let target = null;
+  document.querySelectorAll("[data-file]").forEach(b => b.onclick = () => { target = b.dataset.file; $("#file").click(); });
+  $("#file").onchange = async e => {
+    const file = e.target.files[0]; e.target.value = "";
+    if(!file || !target) return;
+    const id = target, msg = $("#msg-"+id), ta = $("#"+id);
+    msg.innerHTML = loading("Lecture de « " + file.name + " »…");
+    try{
+      const txt = await extractText(file);
+      if(!txt.trim()) throw new Error("Aucun texte trouvé. Si c'est un PDF scanné (une image), copie-colle le texte à la main.");
+      if(ta.value.trim() && !confirm("Remplacer le texte déjà présent ?")){ msg.innerHTML = ""; return; }
+      ta.value = txt; S.docs[id] = txt; save();
+      msg.innerHTML = `<p class="muted small" style="margin-top:6px">✓ ${esc(file.name)} importé (${txt.length} caractères). Relis le texte et corrige si besoin.</p>`;
+    }catch(err){ msg.innerHTML = `<div class="err">${esc(err.message)}</div>`; }
+  };
+  const store = () => { for(const k of Object.keys(S.docs)) S.docs[k] = $("#"+k).value; save(); };
+  $("#save").onclick = () => { store(); go("home"); };
+  $("#ana").onclick = async () => { store();
+    if(!S.docs.offre.trim() || !S.docs.cv.trim()){ $("#out").innerHTML = `<div class="err">Il faut au moins l'offre et le CV.</div>`; return; }
+    $("#out").innerHTML = loading("Analyse en cours…");
+    try{ S.analyse = await ask(sysCoach(), `Analyse l'adéquation entre le candidat et le poste avant l'entretien.
+Réponds en JSON : {"atouts":["…"],"zones_risque":[{"point":"…","question_probable":"…","piste":"…"}],"a_preparer":["…"],"infos_manquantes":["…"]}
+- atouts : 3 à 5 points forts du profil pour CE poste, chacun relié à un élément précis de l'offre.
+- zones_risque : 3 à 5 points sur lesquels un recruteur va creuser (écart avec l'offre, trou, reconversion…), la question probable, et une piste de réponse fondée sur ce qui est réellement dans les documents.
+- a_preparer : exemples concrets que le candidat devrait préparer (format STAR).
+- infos_manquantes : questions à poser au candidat pour mieux l'aider.`, 2500); save(); go("analyse"); }
+    catch(e){ $("#out").innerHTML = `<div class="err">${esc(e.message)}</div>`; } };
+};
+
+SCREENS.analyse = () => {
+  setTitle("Analyse du profil");
+  const a = S.analyse || {};
+  app.innerHTML = `<h2>Ton profil face au poste</h2>
+  <div class="card soft"><h3 style="margin-top:0">Tes atouts</h3>${list(a.atouts)}</div>
+  <div class="card"><h3 style="margin-top:0">Où le recruteur va creuser</h3>
+   ${(a.zones_risque||[]).map(z=>`<details open><summary>${esc(z.point)}</summary>
+     <p class="small"><b>Question probable :</b> ${esc(z.question_probable)}</p>
+     <p class="small"><b>Piste :</b> ${esc(z.piste)}</p></details>`).join("") || "<p class='muted'>—</p>"}</div>
+  <div class="card sand"><h3 style="margin-top:0">Exemples à préparer</h3>${list(a.a_preparer)}</div>
+  ${a.infos_manquantes?.length ? `<div class="card"><h3 style="margin-top:0">Questions pour toi</h3><p class="muted small">Complète « Sur toi » avec tes réponses.</p>${list(a.infos_manquantes)}</div>`:""}
+  <button class="btn block" id="go">Passer l'entretien</button>`;
+  $("#go").onclick = () => go("iaSetup");
+};
+
+/* ---------- Entretien IA ---------- */
+SCREENS.iaSetup = () => {
+  setTitle("Entretien avec l'IA");
+  const o = S.opts;
+  const chip = (grp,val,label,cur) => `<button class="chip ${cur==val?"on":""}" data-g="${grp}" data-v="${val}">${label}</button>`;
+  const missing = !S.docs.offre.trim() || !S.docs.cv.trim();
+  app.innerHTML = `<h2>Paramètres de l'entretien</h2>
+  ${!S.cfg.apiKey ? `<div class="err">Ajoute d'abord ta clé API dans Réglages.</div>`:""}
+  ${missing ? `<div class="card sand small">Ton CV ou l'offre est vide : l'entretien sera générique. Complète « Mes documents » pour un entretien personnalisé.</div>`:""}
+  <label>Recruteur</label><div class="chips">
+   ${chip("ton","bienveillant","Bienveillant",o.ton)}${chip("ton","neutre","Neutre",o.ton)}${chip("ton","exigeant","Exigeant",o.ton)}</div>
+  <label>Nombre de questions</label><div class="chips">
+   ${[5,8,12].map(n=>chip("nb",n,n+" questions",o.nb)).join("")}</div>
+  <label>Conseils</label><div class="chips">
+   ${chip("conseils","apres","Après chaque réponse",o.conseils)}${chip("conseils","fin","Tout à la fin",o.conseils)}</div>
+  <p class="muted small" style="margin-top:10px">« Tout à la fin » ressemble plus à un vrai entretien : pas d'interruption.</p>
+  <div class="sp"></div>
+  <button class="btn block" id="start" ${S.cfg.apiKey?"":"disabled"}>Commencer</button>`;
+  document.querySelectorAll(".chip").forEach(c => c.onclick = () => {
+    const g=c.dataset.g; S.opts[g] = g==="nb" ? +c.dataset.v : c.dataset.v; save();
+    document.querySelectorAll(`[data-g="${g}"]`).forEach(x=>x.classList.toggle("on", x===c)); });
+  $("#start").onclick = () => { S.session = {id:Date.now(), items:[], main:0, done:false, opts:{...S.opts}, bilan:null}; save(); go("interview"); };
+};
+
+function transcript(items){
+  return items.map((it,i)=>`Q${i+1}${it.relance?" (relance)":""} [${it.cat||""}] : ${it.q}\nRéponse : ${it.answer||"(pas encore répondu)"}`).join("\n\n");
+}
+async function nextQuestion(){
+  const s = S.session, last = s.items[s.items.length-1];
+  const canRelance = last && !last.relance && s.main < s.opts.nb;
+  const isLast = s.main === s.opts.nb - 1;
+  const r = await ask(sysRecruteur(), `Entretien en cours. Questions principales déjà posées : ${s.main} sur ${s.opts.nb}.
+Échanges précédents :
+${transcript(s.items) || "(aucun, c'est le début)"}
+
+Pose la question suivante.
+- Si c'est le début, commence par une invitation à se présenter.
+- Varie les types : motivation, parcours, compétences de l'offre, mises en situation (« racontez une fois où… »), points sensibles du profil, connaissance de la structure.
+${canRelance ? "- Si la dernière réponse est vague, incomplète ou sans exemple concret, tu peux poser UNE relance ciblée dessus (relance: true). Sinon, passe à une nouvelle question." : "- Pas de relance : pose une nouvelle question principale."}
+${isLast ? "- C'est la dernière question principale : demande au candidat s'il a des questions, ou une question de conclusion." : ""}
+- Une seule question, formulée comme à l'oral, courte.
+JSON : {"question":"…","categorie":"Présentation|Motivation|Parcours|Compétences|Mise en situation|Point sensible|Structure|Conclusion","relance":false}`, 400);
+  const it = {q:r.question, cat:r.categorie, relance: !!(r.relance && canRelance), answer:"", fb:null, retries:[]};
+  if(!it.relance) s.main++;
+  s.items.push(it); save();
+}
+async function feedback(it){
+  it.fb = await ask(sysCoach(), `Question du recruteur : ${it.q}
+Réponse du candidat (peut venir d'une dictée vocale, ignore les fautes de transcription) :
+"""${it.answer}"""
+
+Analyse cette réponse.
+JSON : {"points_forts":["…"],"manques":["…"],"reformulation":"…","a_verifier":["…"],"conseil":"…"}
+- points_forts : ce qui marche, à garder (2 à 4).
+- manques : ce qui manque ou affaiblit (élément de l'offre ou du CV non exploité, absence d'exemple, de résultat, tournure négative, longueur…).
+- reformulation : réécris SA réponse en partant de ses mots, de sa structure et de son vocabulaire. Rends les tournures négatives positives et complète avec des éléments tirés UNIQUEMENT des documents. Entoure chaque ajout ou modification importante par [+ et +], exemple : « j'ai [+piloté+] le projet ». Longueur d'une réponse orale de 1 à 2 minutes.
+- a_verifier : éléments que tu aurais aimé ajouter mais qui ne sont pas dans les documents, formulés en questions (« As-tu déjà… ? »). Liste vide si rien.
+- conseil : un conseil de méthode en une ou deux phrases.`, 1800);
+  save();
+}
+
+SCREENS.interview = async () => {
+  setTitle("Entretien");
+  const s = S.session;
+  if(!s){ go("home"); return; }
+  let it = s.items[s.items.length-1];
+  if(!it || it.answer){
+    if(it && s.main >= s.opts.nb){ finish(); return; }
+    app.innerHTML = loading("Le recruteur prépare sa question…");
+    try{ await nextQuestion(); }catch(e){ app.innerHTML = `<div class="err">${esc(e.message)}</div><button class="btn block" onclick="go('interview')">Réessayer</button>`; return; }
+    it = s.items[s.items.length-1];
+  }
+  app.innerHTML = `<div class="progress">Question ${s.main} sur ${s.opts.nb}${it.relance?" · relance":""}</div>
+  <div class="bar"><i style="width:${Math.round(100*(s.main-1)/s.opts.nb)}%"></i></div>
+  <div class="sp"></div>
+  <div class="card soft"><span class="tag">${esc(it.cat||"Question")}</span><p class="q">${esc(it.q)}</p></div>
+  <div class="row" style="align-items:center;justify-content:space-between"><span class="muted small">Temps de réponse</span><span class="timer" id="tm">0:00</span></div>
+  <label for="ans">Ta réponse</label>
+  <textarea id="ans" style="min-height:180px" placeholder="Écris ou dicte ta réponse comme tu la dirais à l'oral…"></textarea>
+  <div class="row" style="margin-top:8px">${micButton("ans")}</div>
+  <div class="sp"></div>
+  <button class="btn block" id="send">Valider ma réponse</button>
+  <div class="sp"></div>
+  <button class="btn ghost block" id="stop">Arrêter et voir le bilan</button>
+  <div id="out"></div>`;
+  bindMic();
+  const tm = $("#tm"); startTimer(tm, 120);
+  $("#stop").onclick = () => {
+    if(s.items.some(x=>x.answer)) { if(!it.answer){ s.items.pop(); if(!it.relance) s.main--; } finish(); }
+    else { S.session=null; save(); history=[]; go("home"); } };
+  $("#send").onclick = async () => {
+    const v = $("#ans").value.trim(); if(!v){ $("#ans").focus(); return; }
+    stopMic(); stopTimer(); it.answer = v; it.time = +tm.dataset.elapsed || 0; save();
+    gameAnswer(s, s.items.indexOf(it));
+    if(s.opts.conseils === "apres"){
+      $("#send").disabled = true; $("#out").innerHTML = loading("Analyse de ta réponse…");
+      try{ await feedback(it); go("feedback", s.items.length-1); }
+      catch(e){ $("#send").disabled=false; $("#out").innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+    } else {
+      PENDING.set(it, feedback(it).catch(()=>{})); // analyse en arrière-plan
+      if(s.main >= s.opts.nb){ finish(); } else { go("interview"); }
+    }
+  };
+};
+
+function fbHTML(fb){
+  if(!fb) return `<p class="muted">Pas d'analyse disponible.</p>`;
+  return `<div class="card soft"><h3 style="margin-top:0">Ce qui marche</h3>${list(fb.points_forts)}</div>
+  <div class="card"><h3 style="margin-top:0">Ce qui manque</h3>${list(fb.manques)}</div>
+  <div class="card sand"><h3 style="margin-top:0">Ta réponse, améliorée</h3><p class="muted small">Les ajouts sont surlignés.</p><p>${marks(fb.reformulation)}</p></div>
+  ${fb.a_verifier?.length ? `<div class="card"><h3 style="margin-top:0">À vérifier</h3><p class="muted small">Si c'est vrai, tu peux l'ajouter.</p>${list(fb.a_verifier)}</div>`:""}
+  ${fb.conseil ? `<div class="card soft"><b>Conseil :</b> ${esc(fb.conseil)}</div>`:""}`;
+}
+
+SCREENS.feedback = (idx) => {
+  setTitle("Conseils");
+  const s = S.session, it = s.items[idx];
+  const tps = it.time ? ` · ${fmt(it.time)}` : "";
+  app.innerHTML = `<p class="muted small">${esc(it.q)}</p>
+  <details><summary>Ta réponse${tps}</summary><p>${esc(it.answer)}</p></details>
+  ${fbHTML(it.fb)}
+  ${it.retries.map((r,i)=>`<div class="card"><h3 style="margin-top:0">Essai ${i+2}</h3><p>${esc(r.answer)}</p>
+    <b>Progrès</b>${list(r.progres)}<b>Encore possible</b>${list(r.encore)}</div>`).join("")}
+  <div class="row"><button class="btn alt" id="retry">Réessayer</button><button class="btn" id="next">${s.main>=s.opts.nb?"Voir le bilan":"Question suivante"}</button></div>`;
+  $("#retry").onclick = () => go("retry", idx);
+  $("#next").onclick = () => { if(s.main>=s.opts.nb) finish(); else go("interview"); };
+};
+
+SCREENS.retry = (idx) => {
+  setTitle("Nouvel essai");
+  const it = S.session.items[idx];
+  app.innerHTML = `<div class="card soft"><p class="q">${esc(it.q)}</p></div>
+  <p class="muted small">Reformule avec tes mots, en t'inspirant des conseils. Ne recopie pas la version proposée : il faut qu'elle sonne comme toi.</p>
+  <textarea id="ans" style="min-height:180px"></textarea>
+  <div class="row" style="margin-top:8px">${micButton("ans")}</div>
+  <div class="sp"></div><button class="btn block" id="send">Comparer avec mon premier essai</button><div id="out"></div>`;
+  bindMic();
+  $("#send").onclick = async () => {
+    const v = $("#ans").value.trim(); if(!v) return; stopMic();
+    $("#send").disabled = true; $("#out").innerHTML = loading("Comparaison…");
+    try{
+      const r = await ask(sysCoach(), `Question : ${it.q}
+Premier essai : """${it.answer}"""
+${it.retries.length ? "Essai précédent : \"\"\""+it.retries[it.retries.length-1].answer+"\"\"\"\n" : ""}Nouvel essai : """${v}"""
+Compare le nouvel essai aux précédents. JSON : {"a_progresse":true,"progres":["…"],"encore":["…"]}
+- a_progresse : true seulement si le nouvel essai est réellement meilleur, sinon false.
+- progres : ce qui est concrètement mieux (1 à 4 points). Si rien n'a progressé, dis-le honnêtement.
+- encore : ce qui peut encore être amélioré (0 à 3 points).`, 800);
+      it.retries.push({answer:v, progres:r.progres, encore:r.encore}); save();
+      gameRetry(S.session, idx, it, r);
+      history.pop(); history.pop(); go("feedback", idx);
+    }catch(e){ $("#send").disabled=false; $("#out").innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+  };
+};
+
+async function finish(){
+  const s = S.session; s.done = true; save();
+  history = [["home",[]]]; go("bilan");
+}
+
+SCREENS.bilan = async () => {
+  setTitle("Bilan");
+  const s = S.session;
+  if(!s){ go("home"); return; }
+  if(!s.bilan){
+    app.innerHTML = loading("Préparation du bilan…");
+    try{
+      await Promise.all(s.items.map(it => PENDING.get(it) || null));
+      await Promise.all(s.items.map(it => (it.answer && !it.fb) ? feedback(it).catch(()=>{}) : null));
+      PENDING.clear();
+      s.bilan = await ask(sysCoach(), `Voici l'entretien complet :
+${transcript(s.items.filter(i=>i.answer))}
+
+Fais le bilan global.
+JSON : {"scores":{"Clarté":0,"Lien avec le poste":0,"Exemples concrets":0,"Valorisation du parcours":0,"Ton positif":0},"synthese":"…","forces":["…"],"conseils":["…"],"a_retravailler":[{"question":"…","pourquoi":"…"}]}
+- scores : de 1 à 5, sévère mais juste, sur la base du texte uniquement.
+- synthese : 3 ou 4 phrases sur l'impression d'ensemble qu'aurait un recruteur.
+- forces : 2 à 4.
+- conseils : 3 à 5 conseils généraux, concrets et applicables (méthode, posture, préparation).
+- a_retravailler : les 3 questions prioritaires, et pourquoi.`, 2000);
+      onBilan(s); save();
+    }catch(e){ app.innerHTML = `<div class="err">${esc(e.message)}</div><button class="btn block" id="again">Réessayer</button>`; $("#again").onclick=()=>go("bilan"); return; }
+  }
+  const b = s.bilan;
+  app.innerHTML = `<h2>Ton bilan</h2>
+  <div class="card">${Object.entries(b.scores||{}).map(([k,v])=>`<div class="score"><span>${esc(k)}</span><div class="bar"><i style="width:${Math.max(0,Math.min(5,+v))*20}%"></i></div><b>${esc(v)}${trend(s,k)}</b></div>`).join("")}
+  <p class="muted small">Notes indicatives, basées sur le texte de tes réponses uniquement.</p></div>
+  <div class="card soft"><p>${esc(b.synthese)}</p></div>
+  <div class="card"><h3 style="margin-top:0">Tes forces</h3>${list(b.forces)}</div>
+  <div class="card sand"><h3 style="margin-top:0">Conseils généraux</h3>${list(b.conseils)}</div>
+  <div class="card"><h3 style="margin-top:0">À retravailler en priorité</h3>
+   ${(b.a_retravailler||[]).map(a=>`<p><b>${esc(a.question)}</b><br><span class="small">${esc(a.pourquoi)}</span></p>`).join("")}</div>
+  <h3>Détail des réponses</h3>
+  ${s.items.filter(i=>i.answer).map((it)=>{ const idx = s.items.indexOf(it);
+    return `<details><summary>${esc(it.q)}</summary><p class="small"><b>Ta réponse :</b> ${esc(it.answer)}</p>${fbHTML(it.fb)}
+    <button class="btn alt block" data-retry="${idx}">Réessayer cette question</button></details>`; }).join("")}
+  <div class="sp"></div>
+  <div class="row"><button class="btn alt" id="dl">Télécharger (.txt)</button><button class="btn" id="new">Nouvel entretien</button></div>`;
+  document.querySelectorAll("[data-retry]").forEach(btn => btn.onclick = () => go("retry", +btn.dataset.retry));
+  $("#new").onclick = () => go("iaSetup");
+  $("#dl").onclick = () => download(reportText(), "bilan-entretien.txt");
+};
+
+function reportText(){
+  const s = S.session, b = s.bilan || {}, L = [];
+  const strip = t => String(t||"").replace(/\[\+|\+\]/g,"");
+  L.push("BILAN D'ENTRETIEN — " + new Date().toLocaleDateString("fr-FR"), "");
+  for(const [k,v] of Object.entries(b.scores||{})) L.push(`${k} : ${v}/5`);
+  L.push("", "Synthèse : " + (b.synthese||""), "", "Forces :", ...(b.forces||[]).map(x=>"- "+x));
+  L.push("", "Conseils :", ...(b.conseils||[]).map(x=>"- "+x));
+  L.push("", "À retravailler :", ...(b.a_retravailler||[]).map(a=>`- ${a.question} : ${a.pourquoi}`), "");
+  s.items.filter(i=>i.answer).forEach((it,i)=>{
+    L.push("────────", `Q${i+1}. ${it.q}`, "Ma réponse : " + it.answer);
+    if(it.fb){ L.push("Points forts :", ...(it.fb.points_forts||[]).map(x=>"- "+x), "Manques :", ...(it.fb.manques||[]).map(x=>"- "+x), "Version améliorée : " + strip(it.fb.reformulation)); }
+    it.retries.forEach((r,j)=>L.push(`Essai ${j+2} : ${r.answer}`));
+    L.push("");
+  });
+  return L.join("\n");
+}
+function download(text, name){
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text],{type:"text/plain;charset=utf-8"}));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* ---------- Hors ligne ---------- */
+SCREENS.offSetup = () => {
+  setTitle("Entraînement hors ligne");
+  const prev = S.offline?.cats || Object.keys(CATS);
+  app.innerHTML = `<h2>Entraînement hors ligne</h2>
+  <p class="muted">Questions classiques d'entretien, chrono, et auto-évaluation avec la grille STAR.</p>
+  <label>Thèmes</label><div class="chips">${Object.entries(CATS).map(([k,v])=>`<button class="chip ${prev.includes(k)?"on":""}" data-c="${k}">${v}</button>`).join("")}</div>
+  <label>Nombre de questions</label><div class="chips" id="nb">${[5,8,12].map(n=>`<button class="chip ${n===8?"on":""}" data-n="${n}">${n}</button>`).join("")}</div>
+  <label>Temps cible par réponse</label><div class="chips" id="du">${[[60,"1 min"],[120,"2 min"],[180,"3 min"]].map(([v,l])=>`<button class="chip ${v===120?"on":""}" data-d="${v}">${l}</button>`).join("")}</div>
+  <p class="muted small" style="margin-top:10px">La dictée vocale peut demander une connexion selon ton téléphone. Sans réseau, écris ta réponse ou entraîne-toi à voix haute.</p>
+  <div class="sp"></div><button class="btn block" id="start">Commencer</button>
+  ${S.offline?.items?.some(i=>i.answer) ? `<div class="sp"></div><button class="btn ghost block" id="last">Revoir le dernier entraînement</button>`:""}`;
+  document.querySelectorAll("[data-c]").forEach(c=>c.onclick=()=>c.classList.toggle("on"));
+  const single = sel => document.querySelectorAll(sel+" .chip").forEach(c=>c.onclick=()=>document.querySelectorAll(sel+" .chip").forEach(x=>x.classList.toggle("on",x===c)));
+  single("#nb"); single("#du");
+  if($("#last")) $("#last").onclick = () => go("offEnd");
+  $("#start").onclick = () => {
+    const cats = [...document.querySelectorAll("[data-c].on")].map(c=>c.dataset.c);
+    if(!cats.length) return;
+    const nb = +$("#nb .on").dataset.n, dur = +$("#du .on").dataset.d;
+    let pool = shuffle(BANK.filter(b=>cats.includes(b.c) && b.c!=="fin" && b.c!=="presentation"));
+    const pres = shuffle(BANK.filter(b=>b.c==="presentation" && cats.includes("presentation")))[0];
+    const fin = BANK.find(b=>b.c==="fin" && cats.includes("fin"));
+    let qs = []; if(pres) qs.push(pres);
+    qs = qs.concat(pool.slice(0, Math.max(0, nb - qs.length - (fin?1:0))));
+    if(fin) qs.push(fin);
+    S.offline = {id:Date.now(), cats, dur, i:0, items: qs.map(b=>({q:b.q,c:b.c,t:b.t,answer:"",star:[],time:0}))}; save();
+    go("offQ");
+  };
+};
+
+SCREENS.offQ = () => {
+  setTitle("Entraînement");
+  const o = S.offline, it = o.items[o.i];
+  app.innerHTML = `<div class="progress">Question ${o.i+1} sur ${o.items.length}</div>
+  <div class="bar"><i style="width:${Math.round(100*o.i/o.items.length)}%"></i></div><div class="sp"></div>
+  <div class="card soft"><span class="tag">${CATS[it.c]}</span><p class="q">${esc(it.q)}</p></div>
+  <div class="row" style="align-items:center;justify-content:space-between"><span class="muted small">Temps restant (cible)</span><span class="timer" id="tm"></span></div>
+  <label for="ans">Ta réponse</label>
+  <textarea id="ans" style="min-height:170px" placeholder="Écris ou dicte ta réponse. Tu peux aussi répondre à voix haute puis noter les idées clés.">${esc(it.answer)}</textarea>
+  <div class="row" style="margin-top:8px">${micButton("ans")}</div>
+  <div class="sp"></div><button class="btn block" id="done">J'ai fini</button>`;
+  bindMic(); const tm=$("#tm"); startTimer(tm, o.dur);
+  $("#done").onclick = () => { stopMic(); stopTimer(); it.answer = $("#ans").value.trim(); it.time = +tm.dataset.elapsed||0; save(); gameOffQ(o); go("offEval"); };
+};
+
+SCREENS.offEval = () => {
+  setTitle("Auto-évaluation");
+  const o = S.offline, it = o.items[o.i];
+  const over = it.time > o.dur + 30, under = it.time < 25;
+  app.innerHTML = `<p class="muted small">${esc(it.q)}</p>
+  <div class="card"><h3 style="margin-top:0">Coche ce que ta réponse contient</h3>
+  ${STAR.map(([k,l])=>`<label class="check"><input type="checkbox" data-k="${k}" ${it.star.includes(k)?"checked":""}><span>${l}</span></label>`).join("")}</div>
+  ${over?`<div class="card sand small">Tu as dépassé le temps cible de plus de 30 s. Essaie de resserrer : une idée, un exemple, un lien avec le poste.</div>`:""}
+  ${under?`<div class="card sand small">Réponse très courte. Un recruteur attend en général un exemple concret.</div>`:""}
+  <div class="card soft"><b>Méthode :</b> ${esc(it.t)}</div>
+  <div class="row"><button class="btn alt" id="again">Réessayer</button><button class="btn" id="next">${o.i+1<o.items.length?"Question suivante":"Terminer"}</button></div>`;
+  const store = () => { it.star = [...document.querySelectorAll("[data-k]:checked")].map(c=>c.dataset.k); save(); gameOffEval(o, it); };
+  $("#again").onclick = () => { store(); history.pop(); history.pop(); go("offQ"); };
+  $("#next").onclick = () => { store(); if(o.i+1<o.items.length){ o.i++; save(); go("offQ"); } else { go("offEnd"); } };
+};
+
+SCREENS.offEnd = () => {
+  setTitle("Récapitulatif");
+  const o = S.offline; recordOff(o);
+  const done = o.items.filter(i=>i.answer||i.star.length);
+  const counts = STAR.map(([k,l])=>[l, done.filter(i=>i.star.includes(k)).length]);
+  const weak = counts.filter(([,n])=>n < done.length/2).map(([l])=>l);
+  app.innerHTML = `<h2>Récapitulatif</h2>
+  <div class="card">${counts.map(([l,n])=>`<div class="score"><span class="small">${l}</span><div class="bar"><i style="width:${done.length?Math.round(100*n/done.length):0}%"></i></div><b>${n}</b></div>`).join("")}
+  <p class="muted small">Nombre de réponses (sur ${done.length}) qui contiennent chaque élément.</p></div>
+  ${weak.length?`<div class="card sand"><h3 style="margin-top:0">Tes axes de travail</h3>${list(weak)}</div>`:`<div class="card soft">Tes réponses couvrent bien la grille. Passe à l'entretien avec l'IA pour un retour plus fin.</div>`}
+  <h3>Tes réponses</h3>
+  ${done.map(it=>`<details><summary>${esc(it.q)}</summary><p class="small">${esc(it.answer)||"<i>(à l'oral)</i>"}</p><p class="small muted">${esc(it.t)}</p></details>`).join("")}
+  <div class="sp"></div><div class="row"><button class="btn alt" id="dl">Télécharger (.txt)</button><button class="btn" id="home">Accueil</button></div>`;
+  $("#home").onclick = () => { history=[]; go("home"); };
+  $("#dl").onclick = () => download(done.map((it,i)=>`Q${i+1}. ${it.q}\n${it.answer}\nMéthode : ${it.t}\n`).join("\n"), "entrainement.txt");
+};
+
+/* ================= Démarrage ================= */
+go("home");
+if("serviceWorker" in navigator && location.protocol.startsWith("http")){
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>

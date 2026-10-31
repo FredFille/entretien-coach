@@ -1,0 +1,38 @@
+ENTRETIEN COACH - Installation sur Android
+==========================================
+
+1. METTRE L'APPLI EN LIGNE (une seule fois, gratuit)
+   - Crée un compte sur github.com
+   - Nouveau dépôt (bouton "New"), nom : entretien-coach, Public
+   - "Add file" > "Upload files" : dépose tous les fichiers ET le dossier "lib"
+     (index.html, sw.js, manifest.webmanifest, icon.svg, icon-192.png, icon-512.png, lib/)
+   - Settings > Pages > Source : "Deploy from a branch", branche "main", dossier "/ (root)"
+   - Attends 1 à 2 minutes. Ton adresse : https://TON-PSEUDO.github.io/entretien-coach/
+
+2. INSTALLER SUR LE TÉLÉPHONE
+   - Ouvre cette adresse dans Chrome
+   - Menu ⋮ > "Ajouter à l'écran d'accueil" (ou "Installer l'application")
+   - L'icône apparaît. L'appli marche ensuite hors ligne (mode entraînement).
+
+3. ACTIVER L'IA (mode en ligne)
+   - Va sur console.anthropic.com, crée un compte, ajoute un peu de crédit
+   - Fixe une limite de dépense mensuelle (Settings > Limits)
+   - API Keys > Create Key, copie la clé (sk-ant-...)
+   - Dans l'appli : Réglages > colle la clé > Tester
+
+IMPORTER SES DOCUMENTS
+   - Formats acceptés : PDF, ODT, DOCX, TXT (fonctionne aussi hors ligne).
+   - Un PDF scanné (image) ne contient pas de texte : copie-colle le texte à la main.
+   - Ancien format Word (.doc) : enregistre-le d'abord en .odt ou .docx.
+   - Relis toujours le texte extrait avant de lancer l'entretien.
+
+MODES D'AFFICHAGE (en haut de l'accueil, ou dans Réglages)
+   - Sobre : interface simple, sans score.
+   - Progression : notes de chaque bilan, courbe d'évolution, critère à travailler.
+   - Jeu : progression + points, niveaux, objectif de la semaine, défi du jour, badges.
+   - L'historique est toujours gardé : changer de mode ne fait rien perdre.
+
+CONFIDENTIALITÉ
+   - Documents, clé et réponses restent dans le téléphone.
+   - Pendant un entretien IA, les textes sont envoyés à Anthropic pour être analysés.
+   - Retire nom, adresse, téléphone et mail de ton CV avant de le coller.
