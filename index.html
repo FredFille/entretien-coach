@@ -159,11 +159,12 @@ const STAR = [
 ];
 const TONS = {bienveillant:"bienveillant et encourageant", neutre:"neutre et professionnel", exigeant:"exigeant, qui pousse dans les retranchements avec des relances précises, sans être agressif"};
 const MODELS = [["claude-sonnet-5-5","Sonnet (recommandé)"],["claude-haiku-5-5","Haiku (rapide, économique)"],["claude-opus-5-5","Opus (le plus fin, plus cher)"]];
+const MISTRAL_MODELS = [["mistral-large-latest","Mistral Large (recommandé)"],["mistral-small-latest","Mistral Small (rapide, économique)"]];
 
 /* ================= État & stockage ================= */
 const KEY = "entretienCoach.v1";
 const DEF = {
-  cfg:{apiKey:"",model:"claude-sonnet-5-5"},
+  cfg:{provider:"anthropic",apiKey:"",model:"claude-sonnet-5-5",mKey:"",mModel:"mistral-large-latest",relay:"",relayCode:""},
   docs:{cv:"",offre:"",lettre:"",entreprise:"",moi:""},
   opts:{ton:"neutre",nb:8,conseils:"apres"},
   analyse:null, session:null, offline:null,
@@ -236,10 +237,25 @@ function startTimer(el, limit){
 }
 function stopTimer(){ if(timerId){ clearInterval(timerId); timerId=null; } }
 
-/* ================= API Anthropic ================= */
-async function claude(system, user, maxTokens){
+/* ================= IA en ligne : Claude (Anthropic) ou Mistral ================= */
+// Mistral : appel direct avec la clé, ou via un relais (Cloudflare Worker) qui garde la clé côté serveur.
+function aiReady(){
+  const c = S.cfg;
+  return c.provider === "mistral" ? !!(c.mKey || c.relay) : !!c.apiKey;
+}
+function httpError(status, data){
+  const m = data?.error?.message || data?.message || data?.detail || ("Erreur " + status);
+  if(status===401) return new Error("Clé API refusée. Vérifie-la dans Réglages.");
+  if(status===403) return new Error("Accès refusé (403). Vérifie la clé, ou le code d'accès du relais.");
+  if(status===429) return new Error("Trop de demandes ou crédit épuisé. Réessaie dans un moment.");
+  return new Error(typeof m === "string" ? m : JSON.stringify(m));
+}
+async function claude(system, user, maxTokens, json){
   if(!navigator.onLine) throw new Error("Pas de connexion internet. Utilise le mode hors ligne.");
-  if(!S.cfg.apiKey) throw new Error("Aucune clé API. Ajoute-la dans Réglages.");
+  if(!aiReady()) throw new Error("Aucune clé API. Ajoute-la dans Réglages.");
+  return S.cfg.provider === "mistral" ? callMistral(system, user, maxTokens, json) : callAnthropic(system, user, maxTokens);
+}
+async function callAnthropic(system, user, maxTokens){
   const r = await fetch("https://api.anthropic.com/v1/messages",{
     method:"POST",
     headers:{"content-type":"application/json","x-api-key":S.cfg.apiKey,
@@ -247,20 +263,35 @@ async function claude(system, user, maxTokens){
     body:JSON.stringify({model:S.cfg.model,max_tokens:maxTokens||1500,system,messages:[{role:"user",content:user}]})
   });
   const data = await r.json().catch(()=>({}));
-  if(!r.ok){
-    const m = data?.error?.message || ("Erreur " + r.status);
-    if(r.status===401) throw new Error("Clé API refusée. Vérifie-la dans Réglages.");
-    if(r.status===429) throw new Error("Trop de demandes ou crédit épuisé. Réessaie dans un moment.");
-    throw new Error(m);
-  }
+  if(!r.ok) throw httpError(r.status, data);
   return (data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
+}
+async function callMistral(system, user, maxTokens, json){
+  const c = S.cfg, viaRelay = !!c.relay.trim();
+  const body = {model:c.mModel || "mistral-large-latest", max_tokens:maxTokens||1500, temperature:0.4,
+    messages:[{role:"system",content:system},{role:"user",content:user}]};
+  if(json) body.response_format = {type:"json_object"};
+  const headers = {"content-type":"application/json"};
+  if(viaRelay){ if(c.relayCode) headers["x-relay-code"] = c.relayCode; }
+  else headers["authorization"] = "Bearer " + c.mKey;
+  let r;
+  try{ r = await fetch(viaRelay ? c.relay.trim() : "https://api.mistral.ai/v1/chat/completions", {method:"POST", headers, body:JSON.stringify(body)}); }
+  catch(e){
+    throw new Error(viaRelay
+      ? "Impossible de joindre le relais. Vérifie son adresse dans Réglages."
+      : "Mistral refuse les appels directs depuis le navigateur. Installe le relais (voir RELAIS-MISTRAL.txt) et indique son adresse dans Réglages.");
+  }
+  const data = await r.json().catch(()=>({}));
+  if(!r.ok) throw httpError(r.status, data);
+  const content = data?.choices?.[0]?.message?.content;
+  return Array.isArray(content) ? content.map(p=>p.text||"").join("") : (content || "");
 }
 function parseJSON(txt){
   const a = txt.indexOf("{"), b = txt.lastIndexOf("}");
   if(a<0||b<0) throw new Error("Réponse de l'IA illisible. Réessaie.");
-  return JSON.parse(txt.slice(a,b+1));
+  try{ return JSON.parse(txt.slice(a,b+1)); }catch(e){ throw new Error("Réponse de l'IA illisible. Réessaie."); }
 }
-async function ask(system,user,max){ return parseJSON(await claude(system,user,max)); }
+async function ask(system,user,max){ return parseJSON(await claude(system,user,max,true)); }
 
 function docsBlock(){
   const d = S.docs, part = (tag,label,v) => v.trim() ? `<${tag}>\n${v.trim()}\n</${tag}>` : `<${tag}>(non fourni : ${label})</${tag}>`;
@@ -572,7 +603,7 @@ SCREENS.progress = () => {
 
 SCREENS.home = () => {
   setTitle("Entretien Coach");
-  const s = S.session, ready = !!S.cfg.apiKey;
+  const s = S.session, ready = aiReady();
   app.innerHTML = `
   ${segMode()}
   <h2>Prépare ton entretien</h2>
@@ -601,12 +632,33 @@ SCREENS.settings = () => {
   app.innerHTML = `
   <h2>Réglages</h2>
   <div class="card">
-    <label for="k">Clé API Anthropic</label>
-    <input type="password" id="k" autocomplete="off" placeholder="sk-ant-…" value="${esc(S.cfg.apiKey)}">
-    <p class="muted small">Elle reste uniquement sur ce téléphone et n'est envoyée qu'à Anthropic. Crée-la sur console.anthropic.com (rubrique API Keys). Fixe une limite de dépense dans la console.</p>
-    <label for="m">Modèle</label>
-    <select id="m">${MODELS.map(([v,l])=>`<option value="${v}" ${S.cfg.model===v?"selected":""}>${l}</option>`).join("")}</select>
-    <div class="sp"></div>
+    <h3 style="margin-top:0">IA en ligne</h3>
+    <label>Fournisseur</label>
+    <div class="chips">${[["anthropic","Claude (Anthropic)"],["mistral","Mistral"]].map(([v,l])=>`<button class="chip ${S.cfg.provider===v?"on":""}" data-prov="${v}">${l}</button>`).join("")}</div>
+    <div id="p-anthropic" ${S.cfg.provider==="anthropic"?"":"hidden"}>
+      <label for="k">Clé API Anthropic</label>
+      <input type="password" id="k" autocomplete="off" placeholder="sk-ant-…" value="${esc(S.cfg.apiKey)}">
+      <p class="muted small">Crée-la sur console.anthropic.com (rubrique API Keys). Fixe une limite de dépense dans la console.</p>
+      <label for="m">Modèle</label>
+      <select id="m">${MODELS.map(([v,l])=>`<option value="${v}" ${S.cfg.model===v?"selected":""}>${l}</option>`).join("")}</select>
+    </div>
+    <div id="p-mistral" ${S.cfg.provider==="mistral"?"":"hidden"}>
+      <label for="mk">Clé API Mistral</label>
+      <input type="password" id="mk" autocomplete="off" placeholder="Colle ta clé Mistral" value="${esc(S.cfg.mKey)}">
+      <p class="muted small">Crée-la sur console.mistral.ai (rubrique API Keys). Fixe une limite de dépense.</p>
+      <label for="mm">Modèle</label>
+      <input type="text" id="mm" list="mlist" autocomplete="off" value="${esc(S.cfg.mModel)}">
+      <datalist id="mlist">${MISTRAL_MODELS.map(([v,l])=>`<option value="${v}">${l}</option>`).join("")}</datalist>
+      <p class="muted small">Par défaut : mistral-large-latest. Tu peux écrire un autre identifiant de modèle.</p>
+      <details style="margin-top:6px"><summary>Relais (si l'appel direct est refusé)</summary>
+        <p class="muted small">Si « Tester » indique que Mistral refuse les appels directs, installe le relais gratuit décrit dans RELAIS-MISTRAL.txt. La clé est alors gardée dans le relais : laisse le champ « Clé API Mistral » vide.</p>
+        <label for="rl">Adresse du relais</label>
+        <input type="text" id="rl" autocomplete="off" placeholder="https://entretien-relais.xxx.workers.dev" value="${esc(S.cfg.relay)}">
+        <label for="rc">Code d'accès du relais</label>
+        <input type="password" id="rc" autocomplete="off" value="${esc(S.cfg.relayCode)}">
+      </details>
+    </div>
+    <p class="muted small" style="margin-top:10px">Les clés restent uniquement sur ce téléphone.</p>
     <div class="row"><button class="btn" id="save">Enregistrer</button><button class="btn alt" id="test">Tester</button></div>
     <div id="msg"></div>
   </div>
@@ -625,10 +677,17 @@ SCREENS.settings = () => {
     <p class="muted small">Tout est stocké sur ce téléphone, dans le navigateur. Rien n'est envoyé ailleurs, sauf à l'IA pendant un entretien en ligne.</p>
     <button class="btn ghost block" id="wipe">Tout effacer</button>
   </div>`;
-  const store = () => { S.cfg.apiKey = $("#k").value.trim(); S.cfg.model = $("#m").value; save(); };
+  const store = () => { const c = S.cfg;
+    c.apiKey = $("#k").value.trim(); c.model = $("#m").value;
+    c.mKey = $("#mk").value.trim(); c.mModel = $("#mm").value.trim() || "mistral-large-latest";
+    c.relay = $("#rl").value.trim(); c.relayCode = $("#rc").value.trim(); save(); };
+  document.querySelectorAll("[data-prov]").forEach(b => b.onclick = () => {
+    S.cfg.provider = b.dataset.prov; save(); $("#msg").innerHTML = "";
+    document.querySelectorAll("[data-prov]").forEach(x=>x.classList.toggle("on", x===b));
+    $("#p-anthropic").hidden = S.cfg.provider !== "anthropic"; $("#p-mistral").hidden = S.cfg.provider !== "mistral"; });
   $("#save").onclick = () => { store(); $("#msg").innerHTML = `<p class="muted">Enregistré.</p>`; };
   $("#test").onclick = async () => { store(); $("#msg").innerHTML = loading("Test en cours…");
-    try{ await claude("Réponds par OK.","Test",10); $("#msg").innerHTML = `<p style="color:var(--ok)">La connexion fonctionne.</p>`; }
+    try{ await ask("Tu réponds uniquement en JSON.","Réponds avec le JSON {\"ok\":true}.",30); $("#msg").innerHTML = `<p style="color:var(--ok)">La connexion fonctionne.</p>`; }
     catch(e){ $("#msg").innerHTML = `<div class="err">${esc(e.message)}</div>`; } };
   bindSeg();
   document.querySelectorAll("[data-goal]").forEach(c => c.onclick = () => { S.goal = +c.dataset.goal; save();
@@ -709,7 +768,7 @@ SCREENS.iaSetup = () => {
   const chip = (grp,val,label,cur) => `<button class="chip ${cur==val?"on":""}" data-g="${grp}" data-v="${val}">${label}</button>`;
   const missing = !S.docs.offre.trim() || !S.docs.cv.trim();
   app.innerHTML = `<h2>Paramètres de l'entretien</h2>
-  ${!S.cfg.apiKey ? `<div class="err">Ajoute d'abord ta clé API dans Réglages.</div>`:""}
+  ${!aiReady() ? `<div class="err">Ajoute d'abord ta clé API dans Réglages.</div>`:""}
   ${missing ? `<div class="card sand small">Ton CV ou l'offre est vide : l'entretien sera générique. Complète « Mes documents » pour un entretien personnalisé.</div>`:""}
   <label>Recruteur</label><div class="chips">
    ${chip("ton","bienveillant","Bienveillant",o.ton)}${chip("ton","neutre","Neutre",o.ton)}${chip("ton","exigeant","Exigeant",o.ton)}</div>
@@ -719,7 +778,7 @@ SCREENS.iaSetup = () => {
    ${chip("conseils","apres","Après chaque réponse",o.conseils)}${chip("conseils","fin","Tout à la fin",o.conseils)}</div>
   <p class="muted small" style="margin-top:10px">« Tout à la fin » ressemble plus à un vrai entretien : pas d'interruption.</p>
   <div class="sp"></div>
-  <button class="btn block" id="start" ${S.cfg.apiKey?"":"disabled"}>Commencer</button>`;
+  <button class="btn block" id="start" ${aiReady()?"":"disabled"}>Commencer</button>`;
   document.querySelectorAll(".chip").forEach(c => c.onclick = () => {
     const g=c.dataset.g; S.opts[g] = g==="nb" ? +c.dataset.v : c.dataset.v; save();
     document.querySelectorAll(`[data-g="${g}"]`).forEach(x=>x.classList.toggle("on", x===c)); });

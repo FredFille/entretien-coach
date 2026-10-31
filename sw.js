@@ -1,5 +1,5 @@
 // Service worker : garde l'appli disponible hors ligne.
-const CACHE = "entretien-coach-v3";
+const CACHE = "entretien-coach-v4";
 const FILES = ["./", "index.html", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png",
   "lib/pdf.min.js", "lib/pdf.worker.min.js", "lib/jszip.min.js"];
 

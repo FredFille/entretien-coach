@@ -1,0 +1,37 @@
+RELAIS MISTRAL (seulement si "Tester" affiche :
+"Mistral refuse les appels directs depuis le navigateur")
+=========================================================
+
+Pourquoi ? Mistral peut refuser qu'une page web l'appelle directement.
+Le relais est un petit programme gratuit hébergé chez Cloudflare :
+l'appli lui parle, il parle à Mistral. Ta clé reste dans le relais.
+
+Les noms de menus peuvent légèrement changer chez Cloudflare.
+
+1. CRÉER LE RELAIS
+   - Crée un compte gratuit sur dash.cloudflare.com
+   - Menu "Workers & Pages" (ou "Compute") > "Create" > "Create Worker"
+   - Nom : entretien-relais > "Deploy"
+   - Clique sur "Edit code", efface tout, colle le contenu du fichier
+     relais-mistral-worker.js, puis "Deploy".
+   - Note l'adresse affichée, du type :
+     https://entretien-relais.TON-COMPTE.workers.dev
+
+2. AJOUTER LES RÉGLAGES DU RELAIS
+   Dans le Worker : "Settings" > "Variables and Secrets" > "Add" :
+   - MISTRAL_API_KEY  type Secret : ta clé Mistral
+   - RELAY_CODE       type Secret : un code inventé, long (ex. 20 caractères)
+   - ALLOWED_ORIGIN   type Text   : https://TON-PSEUDO.github.io
+                                     (sans /entretien-coach, sans / final)
+   Puis "Deploy" / "Save".
+
+3. DANS L'APPLI
+   - Réglages > Fournisseur : Mistral
+   - Laisse "Clé API Mistral" VIDE
+   - Ouvre "Relais" : colle l'adresse du relais et le code d'accès
+   - Enregistrer > Tester
+
+SÉCURITÉ
+   - Le relais n'accepte que les demandes venant de ton appli ET portant le code.
+   - Fixe quand même une limite de dépense dans la console Mistral.
+   - En cas de doute : change RELAY_CODE dans Cloudflare et dans l'appli.
